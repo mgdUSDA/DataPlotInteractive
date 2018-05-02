@@ -49,6 +49,10 @@ unitsPath <- "D:/T3620 dusaire/dataprocessing/R/Rrepo/data-parser/shiny/DataPlot
 
 ui <- fluidPage(
   sidebarPanel(width = 2,
+               radioButtons("dataFormat", "Data Format",
+                            c("Arduino data" = "Arduino", "Cozir Arduino Reader 18.02" = "Cozir", "XYZ data" = "XYZ"),
+                            selected = "Cozir"
+               ),
                fileInput('file1', 'Choose CSV File',
                          accept=c('text/csv', 
                                   'text/comma-separated-values,text/plain', 
@@ -127,6 +131,22 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
+  
+  observe({
+    if (input$dataFormat == 'Arduino') {
+      cat("Arduino")
+      
+    } else {
+      if (input$dataFormat == 'Cozir') {
+        cat("Cozir")
+        
+      } else {
+        cat("XYZ")
+        cat("...", input$dataFormat)
+      }
+    }
+    
+  })
   
   fileInfo <- reactiveValues(name = NULL, path = NULL)
   ranges <- reactiveValues(x = NULL, y = NULL)

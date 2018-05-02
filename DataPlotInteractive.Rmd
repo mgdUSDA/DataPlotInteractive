@@ -1,0 +1,62 @@
+---
+title: "DataPlotInteractive"
+author: "mdusaire"
+date: "May 2, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+### Pre-process data before plotting.  The 3 data file formats are called:  Arduino, Cozir-Arduino, XYZ
+
+#### Cozir-Arduino data collected using cozirReader18.02 is in the correct format and does not require pre-processing.
+
+#### Pre-processing Arduino data.
+
+```{r arduino data}
+
+infile <- "D:/T3620 dusaire/Arduino/rsmt/HN3 test Baker field 050218.csv"
+
+infile <- gsub("\\\\", "/", infile)
+  fName <- paste("/", strsplit(infile, "/")[[1]][length(strsplit(infile, "/")[[1]])], sep = "")
+  dataFolder <- strsplit(infile, fName)[[1]][1]
+  idBase <- strsplit(fName, ".csv")[[1]][1]
+  idBase <- gsub("/", "", idBase)
+
+
+rd <- read.csv(infile, header = TRUE, as.is = TRUE, strip.white = TRUE, blank.lines.skip = TRUE, na.strings = "INF")
+
+# When the Arduino program is launched it may collect INF or other non-data if the sensors or program did not initialize correctly.  Remove these rows of non-data.
+
+rd <- na.omit(rd)
+
+# Test for INF data.
+
+which(rd == "INF", arr.ind = TRUE)[,"row"]
+
+# The Arduino software writes column headers every time the program is launched.  Use column header location to break data into data blocks.
+
+which(rd[, 1] %in% colnames(rd))
+
+
+
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
