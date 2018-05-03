@@ -31,12 +31,12 @@ infile <- gsub("\\\\", "/", infile)
   idBase <- strsplit(fName, ".csv")[[1]][1]
   idBase <- gsub("/", "", idBase)
 
-
 rd <- read.csv(infile, header = TRUE, as.is = TRUE, strip.white = TRUE, blank.lines.skip = TRUE, na.strings = "INF")
 
 # When the Arduino program is launched it may collect INF or other non-data if the sensors or program did not initialize correctly.  Remove these rows of non-data.
 
 rd <- na.omit(rd)
+rd <- cbind(rd, id = NA, time = NA)
 
 # Test for INF data.
 
@@ -44,10 +44,17 @@ which(rd == "INF", arr.ind = TRUE)[,"row"]
 
 # The Arduino software writes column headers every time the program is launched.  Use column header location to break data into data blocks.
 
-which(rd[, 1] %in% colnames(rd))
+idBreaks <- which(rd[, 1] %in% colnames(rd))
+rd[, 'id'] <-  paste(idBase, "_1", sep ="")
+for (i in 1:length(idBreaks)) {
+  
+        idStart <- idBreaks[i] + 1
+  
+rd[idStart:nrow(rd), 'id'] <- paste(idBase, "_", i + 1, sep = "")
+rd[idStart:nrow(rd), 'time'] <- (as.numeric(rd[idStart:nrow(rd), 'millis']) - as.numeric(rd[idStart, 'millis'])) / 1000
+}
 
-
-
+rd[idStart:nrow(rd), 'time'] <- (as.numeric(rd[idStart:nrow(rd), 'millis']) - as.numeric(rd[idStart, 'millis'])) / 1000
 
 ```
 
