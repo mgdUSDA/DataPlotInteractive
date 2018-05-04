@@ -23,15 +23,17 @@ When you click the **Knit** button a document will be generated that includes bo
 
 ```{r arduino data}
 
+# rm(list = ls())
+
 infile <- "D:/T3620 dusaire/Arduino/rsmt/HN3 test Baker field 050218.csv"
 
 infile <- gsub("\\\\", "/", infile)
-  fName <- paste("/", strsplit(infile, "/")[[1]][length(strsplit(infile, "/")[[1]])], sep = "")
-  dataFolder <- strsplit(infile, fName)[[1]][1]
-  idBase <- strsplit(fName, ".csv")[[1]][1]
-  idBase <- gsub("/", "", idBase)
+fName <- paste("/", strsplit(infile, "/")[[1]][length(strsplit(infile, "/")[[1]])], sep = "")
+dataFolder <- strsplit(infile, fName)[[1]][1]
+idBase <- strsplit(fName, ".csv")[[1]][1]
+idBase <- gsub("/", "", idBase)
 
-rd <- read.csv(infile, header = TRUE, as.is = TRUE, strip.white = TRUE, blank.lines.skip = TRUE, na.strings = "INF")
+rd <- read.csv(infile, header = TRUE, as.is = TRUE, strip.white = TRUE, blank.lines.skip = TRUE, na.strings = c("NA", "INF"))
 
 # When the Arduino program is launched it may collect INF or other non-data if the sensors or program did not initialize correctly.  Remove these rows of non-data.
 
@@ -39,31 +41,31 @@ rd <- na.omit(rd)
 rd <- cbind(rd, id = NA, time = NA)
 
 # Test for INF data.
-
-which(rd == "INF", arr.ind = TRUE)[,"row"]
+# which(rd == "INF", arr.ind = TRUE)[,"row"]
 
 # The Arduino software writes column headers every time the program is launched.  Use column header location to break data into data blocks.
 
 idBreaks <- which(rd[, 1] %in% colnames(rd))
 rd[, 'id'] <-  paste(idBase, "_1", sep ="")
+rd[, 'time'] <- (as.numeric(rd[1:nrow(rd), 'millis']) - as.numeric(rd[1, 'millis'])) / 1000
 for (i in 1:length(idBreaks)) {
+  idStart <- idBreaks[i] + 1
   
-        idStart <- idBreaks[i] + 1
+  # fill id column
   
-rd[idStart:nrow(rd), 'id'] <- paste(idBase, "_", i + 1, sep = "")
-rd[idStart:nrow(rd), 'time'] <- (as.numeric(rd[idStart:nrow(rd), 'millis']) - as.numeric(rd[idStart, 'millis'])) / 1000
+  rd[idStart:nrow(rd), 'id'] <- paste(idBase, "_", i + 1, sep = "")
+  
+  # fill time column
+  
+  rd[idStart:nrow(rd), 'time'] <- (as.numeric(rd[idStart:nrow(rd), 'millis']) - as.numeric(rd[idStart, 'millis'])) / 1000
 }
 
-rd[idStart:nrow(rd), 'time'] <- (as.numeric(rd[idStart:nrow(rd), 'millis']) - as.numeric(rd[idStart, 'millis'])) / 1000
+# Remove extra header rows
 
+rd <- rd[-idBreaks,]
 ```
 
 ## Including Plots
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

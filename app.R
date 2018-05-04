@@ -194,6 +194,13 @@ server <- function(input, output, session) {
     #    rd <- as.data.frame(read.csv(inFile$datapath, header = FALSE))
     rd <- read.csv(inFile$datapath, header = TRUE, as.is = TRUE, strip.white = TRUE, blank.lines.skip = TRUE)
     
+    
+    # Identify data file format (input$dataFormat) and cleanup dataframe.
+    
+    # Arduino
+    
+    # CozirReader18.02
+    
     # The current version of cozirReader18.02 inserts column headers each time data collection is restarted within the same campaign.
     # This is bad, and adds an extra row of "values" for each data set.  Identify and remove extra header rows:
     
