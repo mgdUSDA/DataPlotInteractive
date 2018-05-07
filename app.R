@@ -191,33 +191,91 @@ server <- function(input, output, session) {
       fileInfo$path <- inFile$datapath
     }
     
+    
+    cat("\n")
+    cat(fileInfo$name)
+    cat("\n\n")
+    
+
     #    rd <- as.data.frame(read.csv(inFile$datapath, header = FALSE))
     rd <- read.csv(inFile$datapath, header = TRUE, as.is = TRUE, strip.white = TRUE, blank.lines.skip = TRUE)
     
     
     # Identify data file format (input$dataFormat) and cleanup dataframe.
     
-    # Arduino
-    
-    # CozirReader18.02
-    
-    # The current version of cozirReader18.02 inserts column headers each time data collection is restarted within the same campaign.
-    # This is bad, and adds an extra row of "values" for each data set.  Identify and remove extra header rows:
-    
-    if (length(which(rd$measure == "measure")) > 0) {
-      rd <- rd[-which(rd$measure == "measure"), ]
-    }
-    
-    # Use long version of data file
-    
-    rd$reading <- as.numeric(rd$reading)
-    rd$time <- as.numeric(rd$time)
-    cat("\n\n is.na rawData(): ")
-    cat(sum(is.na(rd)))
-    cat("\n\n")
-    rd <- na.omit(rd)
-    cat("\n\n Removed?  ")
-    cat(sum(is.na(rd)))
+    switch(input$dataFormat,
+           
+           # Arduino
+           
+           Arduino = {
+             
+             # Get data file info
+
+             idBase <- strsplit(fileInfo$name, ".txt")[[1]][1]
+             
+             
+             # When the Arduino program is launched it may collect INF or other non-data if the sensors or program did not initialize correctly.  Remove these rows of non-data.
+             
+             rd <- na.omit(rd)
+             rd <- cbind(rd, id = NA, time = NA)
+             
+             # Test for INF data.
+             # which(rd == "INF", arr.ind = TRUE)[,"row"]
+             
+             # The Arduino software writes column headers every time the program is launched.  Use column header location to break data into data blocks.
+             
+             idBreaks <- which(rd[, 1] %in% colnames(rd))
+             rd[, 'id'] <-  paste(idBase, "_1", sep ="")
+             rd[, 'time'] <- (as.numeric(rd[1:nrow(rd), 'millis']) - as.numeric(rd[1, 'millis'])) / 1000
+             for (i in 1:length(idBreaks)) {
+               idStart <- idBreaks[i] + 1
+               
+               # fill id column
+               
+               rd[idStart:nrow(rd), 'id'] <- paste(idBase, "_", i + 1, sep = "")
+               
+               # fill time column
+               
+               rd[idStart:nrow(rd), 'time'] <- (as.numeric(rd[idStart:nrow(rd), 'millis']) - as.numeric(rd[idStart, 'millis'])) / 1000
+             }
+             
+             # Remove extra header rows
+             
+             rd <- rd[-idBreaks,]
+             
+             rd <- gather(rd, reading, measure, NH3:Temperature, -datetime, -millis, -time)
+             
+             cat("Successfully reforematted Arduino data.\n")
+             
+           },
+           Cozir = {
+             
+             # CozirReader18.02
+             
+             # The current version of cozirReader18.02 inserts column headers each time data collection is restarted within the same campaign.
+             # This is bad, and adds an extra row of "values" for each data set.  Identify and remove extra header rows:
+             
+             if (length(which(rd$measure == "measure")) > 0) {
+               rd <- rd[-which(rd$measure == "measure"), ]
+             }
+             
+             # Use long version of data file
+             
+             rd$reading <- as.numeric(rd$reading)
+             rd$time <- as.numeric(rd$time)
+             cat("\n\n is.na rawData(): ")
+             cat(sum(is.na(rd)))
+             cat("\n\n")
+             rd <- na.omit(rd)
+             cat("\n\n Removed?  ")
+             cat(sum(is.na(rd)))
+
+             cat("Successfully formatted CozirReader 18.02 data.\n")
+           },
+           XYZ = {
+             cat("Process XYZ data\n\n")
+           }
+           )
     rd
   })
   

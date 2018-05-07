@@ -63,6 +63,8 @@ for (i in 1:length(idBreaks)) {
 # Remove extra header rows
 
 rd <- rd[-idBreaks,]
+
+ tttt <- gather(rd, reading, measure, NH3:Temperature, -datetime, -millis, -time)
 ```
 
 ## Including Plots
