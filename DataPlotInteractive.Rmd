@@ -21,11 +21,17 @@ When you click the **Knit** button a document will be generated that includes bo
 
 #### Pre-processing Arduino data.
 
+```{r libraries}
+
+library(ggplot2)
+library(tidyr)
+```
+
 ```{r arduino data}
 
 # rm(list = ls())
 
-infile <- "D:/T3620 dusaire/Arduino/rsmt/HN3 test Baker field 050218.csv"
+infile <- "D:/T3620 dusaire/Arduino/rsmt/051418A BCPlots.txt"
 
 infile <- gsub("\\\\", "/", infile)
 fName <- paste("/", strsplit(infile, "/")[[1]][length(strsplit(infile, "/")[[1]])], sep = "")
@@ -46,28 +52,73 @@ rd <- cbind(rd, id = NA, time = NA)
 # The Arduino software writes column headers every time the program is launched.  Use column header location to break data into data blocks.
 
 idBreaks <- which(rd[, 1] %in% colnames(rd))
-rd[, 'id'] <-  paste(idBase, "_1", sep ="")
 rd[, 'time'] <- (as.numeric(rd[1:nrow(rd), 'millis']) - as.numeric(rd[1, 'millis'])) / 1000
-for (i in 1:length(idBreaks)) {
-  idStart <- idBreaks[i] + 1
+if (length(idBreaks) > 0) {
+  rd[, 'id'] <-  paste(idBase, "_1", sep ="")  
+  for (i in 1:length(idBreaks)) {
+    idStart <- idBreaks[i] + 1
+    
+    # fill id column
+    
+    rd[idStart:nrow(rd), 'id'] <- paste(idBase, "_", i + 1, sep = "")
+    
+    # fill time column
+    
+    rd[idStart:nrow(rd), 'time'] <- (as.numeric(rd[idStart:nrow(rd), 'millis']) - as.numeric(rd[idStart, 'millis'])) / 1000
+  }
   
-  # fill id column
+# Remove extra header rows
   
-  rd[idStart:nrow(rd), 'id'] <- paste(idBase, "_", i + 1, sep = "")
-  
-  # fill time column
-  
-  rd[idStart:nrow(rd), 'time'] <- (as.numeric(rd[idStart:nrow(rd), 'millis']) - as.numeric(rd[idStart, 'millis'])) / 1000
+  rd <- rd[-idBreaks,]
+} else {
+  rd[, 'id'] <- idBase
 }
 
-# Remove extra header rows
+for (i in 2:12) {
+ rd[, i] <- as.numeric((rd[, i]))
+}
 
-rd <- rd[-idBreaks,]
 
- tttt <- gather(rd, reading, measure, NH3:Temperature, -datetime, -millis, -time)
+for (i in 2:12) {
+ rd[, i] <- rd[, i] / max(rd[, i], na.rm = TRUE)
+}
+
+ # Normalize readings
+
+ rd_long <- gather(rd, key = measure, value = reading, NH3:Temperature, -datetime, -millis, -time)
+ 
+
+ 
+ 
+ 
+ write.csv(rd_long, "D:/T3620 dusaire/Arduino/rsmt/DPI.csv")
+ 
 ```
 
 ## Including Plots
+```{r plots}
+plotData <- rd_long
+#plotData <- subset(rd_long, select = NH3)
 
+
+g <- ggplot(data = plotData, aes(x = time, y = reading, color = measure, shape = id)) +
+      geom_point(size = 2.5) +
+      # scale_shape_manual(values = c(0:18)) +
+      # scale_colour_manual(values = pColors()) +
+      # coord_cartesian(xlim = time, ylim = ranges$y) +
+      # xlab(paste(input$xcol, " (", mUnits()[time], ")", sep = "")) +
+      ggtitle(paste("Data for", fName))
+
+print(g)
+```
+
+```{r stats}
+
+rdVar <- subset(rd, select = NH3:Temperature)
+
+cor(rdVar)
+
+pairs(rdVar)
+```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

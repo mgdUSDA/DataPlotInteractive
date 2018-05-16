@@ -199,7 +199,7 @@ server <- function(input, output, session) {
 
     #    rd <- as.data.frame(read.csv(inFile$datapath, header = FALSE))
     rd <- read.csv(inFile$datapath, header = TRUE, as.is = TRUE, strip.white = TRUE, blank.lines.skip = TRUE)
-    
+    print(head(rd))
     
     # Identify data file format (input$dataFormat) and cleanup dataframe.
     
@@ -243,7 +243,7 @@ server <- function(input, output, session) {
              
              rd <- rd[-idBreaks,]
              
-             rd <- gather(rd, reading, measure, NH3:Temperature, -datetime, -millis, -time)
+             rd <- gather(rd, measure, reading, NH3:Temperature, -datetime, -millis, -time)
              
              cat("Successfully reforematted Arduino data.\n")
              
