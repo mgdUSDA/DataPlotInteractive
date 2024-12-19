@@ -34,8 +34,13 @@ cat("\n\n")
 
 # Set companion files to reside in Active directory.
 
-colorPath <- "DataPlotColorPallete.csv"
-unitsPath <- "DataPlotUnits.csv"
+dataPalette <- paste(currentDir, "/DataPalette.csv", sep = "")
+#unitsPath <- paste(currentDir, "/DataPlotUnits.csv", sep = "")
+
+cat("\n\n")
+cat(dataPalette)
+cat("\n\n")
+
 
 
 #---------------------------------------------------------------------
@@ -152,19 +157,27 @@ server <- function(input, output, session) {
   values <- reactiveValues(data = NULL)
   
   pColors <- reactive({
-    tempColors <- read.csv(colorPath, sep = ",", header = TRUE, as.is = TRUE, strip.white = TRUE, blank.lines.skip = TRUE)
+    tempColors <- read.csv(dataPalette, sep = ",", header = TRUE, as.is = TRUE, strip.white = TRUE, blank.lines.skip = TRUE)
     pColors <- tempColors$qualitative
     names(pColors) <- tempColors$measure
     pColors
   })
   
   mUnits <- reactive({
-    tempUnits <- read.csv(unitsPath, sep = ",", header = TRUE, as.is = TRUE, strip.white = TRUE, blank.lines.skip = TRUE)
+    
+    cat("\n\n")
+    cat("mUnits :\n")
+    cat("   > ")
+    cat(dataPalette)
+    cat("\n\n")
+    
+    tempUnits <- read.csv(dataPalette, sep = ",", header = TRUE, as.is = TRUE, strip.white = TRUE, blank.lines.skip = TRUE)
     mUnits <- tempUnits$units
     names(mUnits) <- tempUnits$measure
     mUnits
   })
   
+
   processData <- reactive({
     
     # input$file1 will be NULL initially. After the user selects
@@ -198,24 +211,27 @@ server <- function(input, output, session) {
     cat("  > ")
     cat(infile)
     cat("\n\n")
+
+    dataFileName <- strsplit(infile, "\\\\")[[1]][length(strsplit(infile, "\\\\")[[1]])]
     
-    infile <- gsub("\\\\", "/", infile)
-    dataFileName <- toupper(strsplit(infile, "/")[[1]][length(strsplit(infile, "/")[[1]])])
-    
-    cat("reformat infile\n")
-    cat(infile)
     cat("\n separate filename:\n")
     cat("    > ")
-    cat(infile)
+    cat(dataFileName)
     
     # infile <- params$infile
     # dataFileName <- params$dataFileName
     filePath <- strsplit(infile, dataFileName)[[1]][[1]]
     
-    cat("\n read data")
+    cat("\n read data\n")
     
     #    rd <- as.data.frame(read.csv(inFile$datapath, header = FALSE))
     rd <- read.csv(infile, header = TRUE, as.is = TRUE, strip.white = TRUE, blank.lines.skip = TRUE)
+    
+    
+    cat("\n\n head of rd: \n")
+    cat("   >>\n")
+    print(head(rd))
+    cat("\n\n")
     
     # The current version of cozirReader18.02 inserts column headers each time data collection is restarted within the same campaign.
     # This is bad, and adds an extra row of "values" for each data set.  Identify and remove extra header rows:
@@ -234,6 +250,7 @@ server <- function(input, output, session) {
     rd <- na.omit(rd)
     cat("\n\n Removed?  ")
     cat(sum(is.na(rd)))
+    cat("\n\n")
     rd
   }) #End of processData()
   
