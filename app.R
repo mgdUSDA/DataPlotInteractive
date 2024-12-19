@@ -21,8 +21,21 @@ appAbbr <- "DPI"
 appVer <- "18.03"
 nearThreshold <- 0.1
 
-colorPath <- "D:/T3620 dusaire/dataprocessing/R/Rrepo/data-parser/shiny/DataPlotInteractive/DataPlotColorPallete.csv"
-unitsPath <- "D:/T3620 dusaire/dataprocessing/R/Rrepo/data-parser/shiny/DataPlotInteractive/DataPlotUnits.csv"
+cat(appName)
+cat("  Version: ")
+cat(appVer)
+cat("\n\n")
+
+currentDir <- getwd()
+cat("Active directory is :\n")
+cat("   > ")
+cat(currentDir)
+cat("\n\n")
+
+# Set companion files to reside in Active directory.
+
+colorPath <- "DataPlotColorPallete.csv"
+unitsPath <- "DataPlotUnits.csv"
 
 
 #---------------------------------------------------------------------
@@ -49,12 +62,17 @@ unitsPath <- "D:/T3620 dusaire/dataprocessing/R/Rrepo/data-parser/shiny/DataPlot
 
 ui <- fluidPage(
   sidebarPanel(width = 2,
-               fileInput('file1', 'Choose CSV File',
-                         accept=c('text/csv', 
-                                  'text/comma-separated-values,text/plain', 
-                                  '.csv')),
-               tags$hr(),
-               
+               # fileInput('file1', 'Choose CSV File',
+               #           accept=c('text/csv', 
+               #                    'text/comma-separated-values,text/plain', 
+               #                    '.csv')),
+               # tags$hr(),
+               actionButton("loaddata", "Select data file..."),
+               # fileInput('file1', 'Choose CSV File',
+               #           accept=c('text/csv', 
+               #                    'text/comma-separated-values,text/plain', 
+               #                    '.csv')),
+               HTML("<hr>"),
                selectInput(inputId = 'xcol',
                            label = 'X variable',
                            choices = NULL,
@@ -147,7 +165,7 @@ server <- function(input, output, session) {
     mUnits
   })
   
-  rawData <- reactive({
+  processData <- reactive({
     
     # input$file1 will be NULL initially. After the user selects
     # and uploads a file, it will be a data frame with 'name',
@@ -155,24 +173,49 @@ server <- function(input, output, session) {
     # column will contain the local filenames where the data can
     # be found.
     
-    validate(
-      need(input$file1 != "", "Select data file to begin.")
-    )
+    # validate(
+    #   need(input$file1 != "", "Select data file to begin.")
+    # )
+    # 
+    # inFile <- input$file1
     
-    inFile <- input$file1
+
+    # if (is.null(inFile)) {
+    #   fileInfo$name <- NULL
+    #   fileInfo$path <- NULL
+    #   return(NULL)
+    #   
+    # } else {
+    #   fileInfo$name <- inFile$name
+    #   fileInfo$path <- inFile$datapath
+    # }
     
-    if (is.null(inFile)) {
-      fileInfo$name <- NULL
-      fileInfo$path <- NULL
-      return(NULL)
-      
-    } else {
-      fileInfo$name <- inFile$name
-      fileInfo$path <- inFile$datapath
-    }
+    cat("\n > choose.files()\n")
+    
+    infile <- choose.files(paste(currentDir, "\\*.txt", sep = ""), caption = "Choose sensor datafile")
+    
+    cat("\n infile:\n")
+    cat("  > ")
+    cat(infile)
+    cat("\n\n")
+    
+    infile <- gsub("\\\\", "/", infile)
+    dataFileName <- toupper(strsplit(infile, "/")[[1]][length(strsplit(infile, "/")[[1]])])
+    
+    cat("reformat infile\n")
+    cat(infile)
+    cat("\n separate filename:\n")
+    cat("    > ")
+    cat(infile)
+    
+    # infile <- params$infile
+    # dataFileName <- params$dataFileName
+    filePath <- strsplit(infile, dataFileName)[[1]][[1]]
+    
+    cat("\n read data")
     
     #    rd <- as.data.frame(read.csv(inFile$datapath, header = FALSE))
-    rd <- read.csv(inFile$datapath, header = TRUE, as.is = TRUE, strip.white = TRUE, blank.lines.skip = TRUE)
+    rd <- read.csv(infile, header = TRUE, as.is = TRUE, strip.white = TRUE, blank.lines.skip = TRUE)
     
     # The current version of cozirReader18.02 inserts column headers each time data collection is restarted within the same campaign.
     # This is bad, and adds an extra row of "values" for each data set.  Identify and remove extra header rows:
@@ -192,6 +235,13 @@ server <- function(input, output, session) {
     cat("\n\n Removed?  ")
     cat(sum(is.na(rd)))
     rd
+  }) #End of processData()
+  
+  rawData <- eventReactive(input$loaddata, {
+    
+    # Process sensor data.  Select data file and load sample info file.
+    
+    processData()
   })
   
   plotVariables <- reactive({
