@@ -1,0 +1,20 @@
+system,measure,units,sequential,qualitative
+cozir,CO2,ppm,#081D58,#1B9E77
+cozir,Humidity,pct,#253494,#D95F02
+cozir,Temperature,C,#225EA8,#7570B3
+cozir,O2,pct,#41B6C4,#E7298A
+cozir,Pressure,atm,#7FCDBB,#66A61E
+cozir,uvTemperature,C,#C7E9B4,#A6761D
+grove,NH3,ppm,#662506,#66C2A5
+grove,NO2,ppm,#993404,#FC8D62
+grove,C3H8,ppm,#CC4C02,#8DA0CB
+grove,C4H10,ppm,#EC7014,#E78AC3
+grove,CH4,ppm,#FE9929,#A6D854
+grove,H2,ppm,#FEC44F,#FFD92F
+grove,C2H5OH,ppm,#FEE391,#E5C494
+grove,temperature,C,#BD0026,#386CB0
+grove,humidity,pct,#FC4E2A,#F0027F
+ohausmb45,temperature,C,#006837,#66C2A5
+ohausmb45,moisture,pct,#31A354,#FC8D62
+ohausmb45,mass,g,#78C679,#8DA0CB
+ohausmb45,MR, ,#ADDD8E,#A6D854
