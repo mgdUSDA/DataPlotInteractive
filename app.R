@@ -528,6 +528,8 @@ server <- function(input, output, session) {
       write.csv(plotData(), file)
     }
   )
+  
+  # Test of commit for old project
 }
 
 shinyApp(ui, server)
